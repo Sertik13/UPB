@@ -1,0 +1,70 @@
+# Функция включения/выключения релейных выходов USB POWER BOX, объединенных в каналы питания 1 и 2,
+# собранного на базе модуля 4 реле и USB GPIO Externder через функцию $fOpenDevExt
+# $AllReleModule 2
+# by Sertik 25/11/2025
+# каждый выход управляется парой реле для одновременного вкл/откл фазы и нуля 220В
+# всего соответственно имеется 2 пары реле: 1,2 - первый справа выход 
+#                                           3,4 - второй справа выход UPB
+
+# версия без озвучивания действия - "тихое реле"
+
+:global fUPB do={
+:global fOpenDevExt
+:local OpenDEflag true
+:local AllReleModule 4; # число реле в USB POWER BOX, не изменять !
+:local RelayChannel ($AllReleModule/2); # число "каналов питания" в USB POWER BOX, не изменять !
+  :do {
+     :if (!any $fOpenDevExt) do={:global fOpenDevExt; /system script run fOpenDevExt}; 
+         } on-error={:set OpenDEflag false}
+
+# команда "list"
+ :if ($1="list") do={
+     :put ""; :put ("$0 ON/OFF 1..."."2/both"); :put ""; :return []}
+
+# команда "ready", проверка готовности и сообщение
+ :if (($1="ready") and ($OpenDEflag)) do={:put ""; :put "$0 is ready !"; :put ""; :log info ""; :log warning "$0 is ready !"; :log info ""; :return OK}
+
+# команда "reset GPIO" (сброс модуля USB GPIO Extender)
+ :if ($1="reset GPIO") do={:put ""; :put "reset USB Power Box from USB GPIO Extender"; :put ""; :log info ""; :log error "reset USB Power Box from USB GPIO Extender"; :log info "";
+ [$fOpenDevExt reset] :return OK}
+
+# команда "reset USB" (сброс питания на всех USB портах)
+ :if ($1="reset USB") do={:put ""; :put "reset USB Power Box from USB power reset"; :put ""; :log info ""; :log error "reset USB Power Box from USB power reset"; :log info "";
+/system routerboard usb power-reset duration=2s; :return OK}
+
+                   
+   :if (!$OpenDEflag) do={:put ""; :put "$0 is not ready"; :put ""; :log info ""; :log error "$0 is not ready"; :log info ""; :return "Error: no OpenDevExt function"}
+
+ :if (($2="both") or ([:len $2]=0)) do={
+      :local action false
+       :if ($1="ON") do={:set $1 "11111"; :set action true
+             :log error ("$0 reports: <Both power channel is ON>"); :put ("$0 reports: <Both power channel is ON>"); 
+      } 
+  :if ($1="OFF") do={:set $1 "00000"; :set action true
+    :log error ("$0 reports: <Both power channel is OFF>"); :put ("$0 reports: <Both power channel is OFF>"); 
+ }
+ :if (!$action) do={:return "Error: bad parametr action $1"}
+   [$fOpenDevExt "SetOut" $1];
+   :return OK}
+
+ :if (([:tonum $2]<1) or ([:tonum $2]>$AllReleModule)) do={:return "Error: bad parametr $2 (power channel number)"}
+
+:local nrelay
+:if ($2="1") do={:set nrelay 1}
+:if ($2="2") do={:set nrelay 3}
+
+ :if (($1="ON") or ($1="OFF")) do={
+     :if ($1="ON") do={:set $1 "OutOn"}
+     :if ($1="OFF") do={:set $1 "OutOff"}
+
+# действие с реле: включение/выключение пары реле (одного канала питания)
+  [$fOpenDevExt $1 $nrelay]
+  :delay 1s
+  [$fOpenDevExt $1 ($nrelay+1)]
+
+# сообщение в лог
+  :log error ("$0 reports: <Power Channel $2 is $1>"); :put ("$0 reports: <Power Channel $2 is $1>"); 
+
+  :return OK;
+ } else={:return "Error: bad parametr $1 (action)"}
+}
