@@ -6,14 +6,14 @@
 
 # usage: 
 
-# $OpenDevExt help
-# $OpenDevExt list - output a list of function commands for the module to the terminal and log
-# :put [$OpenDevExt logic] - return the set value of the operating logic
-# $OpenDevExt logic [true/false] - set forward/reverse operating logic
-# $OpenDevExt reset - module reset
-# $OpenDevExt SetOut XXYXY [0-1] - setting all Out outputs, for example 00111
-# $OpenDevExt OutOn X [1-5] - “turn on” output X 
-# $OpenDevExt OutOff Y - “turn off” output Y [1-5]
+# $fOpenDevExt help
+# $fOpenDevExt list - output a list of function commands for the module to the terminal and log
+# :put [$fOpenDevExt logic] - return the set value of the operating logic
+# $fOpenDevExt logic [true/false] - set forward/reverse operating logic
+# $fOpenDevExt reset - module reset
+# $fOpenDevExt SetOut XXYXY [0-1] - setting all Out outputs, for example 00111
+# $fOpenDevExt OutOn X [1-5] - “turn on” output X 
+# $fOpenDevExt OutOff Y - “turn off” output Y [1-5]
 
 # all module commands:
 # -----------------------------------------------------------------------
@@ -35,7 +35,7 @@
 # if logic was not specified, the function sets the direct operating logic, if it was specified, it is remembered in global $OpenDevReleLogic 
 # and the SetOut OutOn and OutOff commands work on it.
 
-:global  OpenDevExt do={
+:global  fOpenDevExt do={
  
 :local ModuleType "OpenDevUsbGPIOExtender"
 :local portTypeUSB "usb"
